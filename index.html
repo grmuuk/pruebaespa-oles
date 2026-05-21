@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WBR Febrero 2026 — Mi Agencia</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #13131a;
+    --surface2: #1c1c28;
+    --border: rgba(255,255,255,0.07);
+    --accent: #6c63ff;
+    --accent2: #ff6584;
+    --accent3: #43e97b;
+    --text: #f0f0f8;
+    --muted: #7a7a9a;
+    --success: #43e97b;
+    --danger: #ff6584;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 0 0 60px;
+  }
+
+  /* HEADER */
+  .header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 28px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .header-left h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+  }
+  .header-left h1 span { color: var(--accent); }
+  .header-left p { font-size: 13px; color: var(--muted); margin-top: 2px; }
+  .header-right { display: flex; align-items: center; gap: 12px; }
+  .badge {
+    font-size: 11px;
+    font-weight: 500;
+    padding: 4px 10px;
+    border-radius: 20px;
+    background: rgba(108,99,255,0.15);
+    color: var(--accent);
+    border: 1px solid rgba(108,99,255,0.3);
+  }
+  .live-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--success);
+    display: inline-block;
+    margin-right: 5px;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  .last-update { font-size: 11px; color: var(--muted); }
+
+  /* LAYOUT */
+  .container { max-width: 1200px; margin: 0 auto; padding: 0 40px; }
+
+  /* PERIOD BAR */
+  .period-bar {
+    background: linear-gradient(135deg, rgba(108,99,255,0.12), rgba(67,233,123,0.06));
+    border-bottom: 1px solid var(--border);
+    padding: 14px 40px;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+  }
+  .period-bar span { font-size: 13px; color: var(--muted); }
+  .period-bar strong { color: var(--text); font-weight: 500; }
+
+  /* SECTIONS */
+  .section { padding: 36px 0 0; }
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* KPI GRID */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+  }
+  .kpi-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .kpi-card:hover { border-color: rgba(108,99,255,0.4); }
+  .kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--accent);
+    opacity: 0.6;
+  }
+  .kpi-card.danger::before { background: var(--danger); }
+  .kpi-card.success::before { background: var(--success); }
+  .kpi-card.warn::before { background: #f9c74f; }
+  .kpi-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .kpi-value { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; line-height: 1; }
+  .kpi-delta { font-size: 12px; margin-top: 6px; }
+  .kpi-delta.up { color: var(--success); }
+  .kpi-delta.down { color: var(--danger); }
+  .kpi-delta.neutral { color: var(--muted); }
+  .kpi-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+  /* CHARTS */
+  .charts-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 16px;
+    margin-top: 16px;
+  }
+  .chart-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+  }
+  .chart-title { font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+  .chart-sub { font-size: 11px; color: var(--muted); margin-bottom: 20px; }
+  .chart-wrap { position: relative; }
+
+  .charts-grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-top: 16px;
+  }
+
+  /* FUNNEL */
+  .funnel { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+  .funnel-row { display: flex; align-items: center; gap: 10px; }
+  .funnel-bar-wrap { flex: 1; background: var(--surface2); border-radius: 4px; height: 32px; overflow: hidden; }
+  .funnel-bar {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    padding-left: 10px;
+    font-size: 12px;
+    font-weight: 500;
+    border-radius: 4px;
+    transition: width 0.8s ease;
+  }
+  .funnel-label { font-size: 11px; color: var(--muted); width: 80px; text-align: right; }
+  .funnel-val { font-size: 12px; font-weight: 600; width: 50px; text-align: right; }
+
+  /* HEATMAP */
+  .heatmap { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-top: 8px; }
+  .heatmap-cell {
+    border-radius: 6px;
+    padding: 10px 6px;
+    text-align: center;
+    font-size: 10px;
+    cursor: default;
+    transition: transform 0.15s;
+  }
+  .heatmap-cell:hover { transform: scale(1.05); }
+  .heatmap-day { font-weight: 600; font-size: 10px; color: var(--muted); margin-bottom: 2px; }
+  .heatmap-leads { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 800; }
+  .heatmap-cpl { font-size: 9px; margin-top: 2px; }
+
+  /* TABLE */
+  .data-table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 13px; }
+  .data-table th {
+    text-align: left;
+    padding: 10px 12px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    user-select: none;
+  }
+  .data-table th:hover { color: var(--text); }
+  .data-table td {
+    padding: 9px 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+    color: var(--text);
+  }
+  .data-table tr:hover td { background: var(--surface2); }
+  .data-table tr.zero td { color: var(--muted); }
+  .pill {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 600;
+  }
+  .pill-good { background: rgba(67,233,123,0.15); color: var(--success); }
+  .pill-bad { background: rgba(255,101,132,0.15); color: var(--danger); }
+  .pill-med { background: rgba(249,199,79,0.15); color: #f9c74f; }
+  .pill-off { background: rgba(122,122,154,0.15); color: var(--muted); }
+
+  /* INSIGHT BOX */
+  .insights { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; margin-top: 16px; }
+  .insight-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 20px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+  .insight-icon {
+    width: 36px; height: 36px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; flex-shrink: 0;
+  }
+  .insight-icon.blue { background: rgba(108,99,255,0.15); }
+  .insight-icon.green { background: rgba(67,233,123,0.15); }
+  .insight-icon.red { background: rgba(255,101,132,0.15); }
+  .insight-icon.yellow { background: rgba(249,199,79,0.15); }
+  .insight-title { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+  .insight-text { font-size: 12px; color: var(--muted); line-height: 1.6; }
+
+  /* LEGEND */
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 12px; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
+  .legend-dot { width: 10px; height: 10px; border-radius: 2px; }
+
+  /* LOADING */
+  .loading {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 13px; color: var(--muted); padding: 20px 0;
+  }
+  .spinner {
+    width: 16px; height: 16px; border: 2px solid var(--border);
+    border-top-color: var(--accent); border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* NOTICE */
+  .notice {
+    background: rgba(249,199,79,0.08);
+    border: 1px solid rgba(249,199,79,0.2);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 12px;
+    color: #f9c74f;
+    margin-top: 12px;
+  }
+
+  @media (max-width: 768px) {
+    .header { padding: 16px 20px; }
+    .container { padding: 0 20px; }
+    .charts-grid { grid-template-columns: 1fr; }
+    .charts-grid-3 { grid-template-columns: 1fr; }
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    .period-bar { padding: 12px 20px; flex-wrap: wrap; gap: 8px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <h1>MI <span>AGENCIA</span> — WBR</h1>
+    <p>Weekly Business Review · Facebook Ads · Febrero 2026</p>
+  </div>
+  <div class="header-right">
+    <span class="badge"><span class="live-dot"></span>Conectado a Sheets</span>
+    <span class="last-update" id="lastUpdate">Cargando...</span>
+  </div>
+</div>
+
+<div class="period-bar container" style="max-width:100%; padding-left:40px;">
+  <span>Periodo: <strong>1 Feb — 28 Feb 2026</strong></span>
+  <span>Cliente: <strong>Travel World Pachuca</strong></span>
+  <span>Canal: <strong>Facebook Ads</strong></span>
+  <span id="statusLine">Cargando datos...</span>
+</div>
+
+<div class="container">
+
+  <!-- KPIs -->
+  <div class="section">
+    <div class="section-title">KPIs del mes</div>
+    <div class="kpi-grid" id="kpiGrid">
+      <div class="loading"><div class="spinner"></div> Cargando métricas...</div>
+    </div>
+  </div>
+
+  <!-- CHARTS ROW 1 -->
+  <div class="section">
+    <div class="section-title">Tendencia diaria</div>
+    <div class="charts-grid">
+      <div class="chart-card">
+        <div class="chart-title">Impresiones vs Alcance</div>
+        <div class="chart-sub">Cobertura diaria de campaña — Febrero 2026</div>
+        <div class="legend">
+          <div class="legend-item"><div class="legend-dot" style="background:#6c63ff"></div>Impresiones</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#ff6584; opacity:0.7;"></div>Alcance</div>
+        </div>
+        <div class="chart-wrap" style="height:220px"><canvas id="lineChart" role="img" aria-label="Impresiones y alcance diario febrero 2026">Tendencia de impresiones y alcance.</canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Leads diarios</div>
+        <div class="chart-sub">Captación por día</div>
+        <div class="chart-wrap" style="height:250px"><canvas id="leadsBar" role="img" aria-label="Leads captados por día">Leads diarios febrero 2026.</canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHARTS ROW 2 -->
+  <div class="section">
+    <div class="section-title">Eficiencia y costos</div>
+    <div class="charts-grid-3">
+      <div class="chart-card">
+        <div class="chart-title">CPL por día</div>
+        <div class="chart-sub">Costo por lead (días con leads)</div>
+        <div class="chart-wrap" style="height:180px"><canvas id="cplChart" role="img" aria-label="Costo por lead diario">CPL por día.</canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Inversión diaria</div>
+        <div class="chart-sub">Gasto en ads por día</div>
+        <div class="chart-wrap" style="height:180px"><canvas id="invChart" role="img" aria-label="Inversión diaria">Inversión diaria febrero 2026.</canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Funnel de conversión</div>
+        <div class="chart-sub">Impresiones → Leads</div>
+        <div class="funnel" id="funnelChart"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HEATMAP -->
+  <div class="section">
+    <div class="section-title">Rendimiento por día de semana</div>
+    <div class="chart-card" style="margin-top:16px;">
+      <div class="chart-title">Leads y CPL promedio por día de semana</div>
+      <div class="chart-sub">Identifica qué días generan más leads al menor costo</div>
+      <div class="heatmap" id="heatmap"></div>
+    </div>
+  </div>
+
+  <!-- TABLE -->
+  <div class="section">
+    <div class="section-title">Detalle diario</div>
+    <div class="chart-card" style="margin-top:16px; overflow-x:auto;">
+      <table class="data-table" id="dataTable">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Día</th>
+            <th>Inversión</th>
+            <th>Impresiones</th>
+            <th>Alcance</th>
+            <th>Clicks</th>
+            <th>CTR</th>
+            <th>Leads</th>
+            <th>CPL</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- INSIGHTS -->
+  <div class="section">
+    <div class="section-title">Descubrimientos clave</div>
+    <div class="insights" id="insightsGrid"></div>
+  </div>
+
+  <div class="notice" id="noVentasNotice" style="display:none;">
+    ⚠️ <strong>Ventas / ROI no disponibles:</strong> El cliente aún no reporta datos de ventas o cierres. Las métricas de ROAS, ROI y CPA se activarán automáticamente cuando se llenen esas columnas en el Sheet.
+  </div>
+
+</div>
+
+<script>
+const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRC439Cyzz4yFBKbCmtH7ZTSk5mMghRw-G6Zq-n5JskIk4zP8nMnSilnnJDZgadyOtSv_i15gr2r-kb/pub?gid=2003079083&single=true&output=csv';
+
+// ── DATA EMBEDDED (fallback + first paint) ──
+const RAW = [
+  {d:'01/02',dia:'domingo',inv:337.86,imp:3784,alc:3443,clk:42,ctr:1.1,vis:38,leads:6,cpl:56.31},
+  {d:'02/02',dia:'lunes',inv:304.84,imp:3559,alc:3175,clk:31,ctr:0.9,vis:32,leads:6,cpl:50.81},
+  {d:'03/02',dia:'martes',inv:291.33,imp:3235,alc:2826,clk:25,ctr:0.8,vis:28,leads:5,cpl:58.27},
+  {d:'04/02',dia:'miércoles',inv:263.46,imp:3457,alc:3155,clk:21,ctr:0.6,vis:25,leads:1,cpl:263.46},
+  {d:'05/02',dia:'jueves',inv:83.74,imp:910,alc:863,clk:5,ctr:0.5,vis:6,leads:1,cpl:83.74},
+  {d:'06/02',dia:'viernes',inv:0,imp:0,alc:0,clk:0,ctr:0,vis:0,leads:0,cpl:0},
+  {d:'07/02',dia:'sábado',inv:0,imp:0,alc:0,clk:0,ctr:0,vis:0,leads:0,cpl:0},
+  {d:'08/02',dia:'domingo',inv:0,imp:0,alc:0,clk:0,ctr:0,vis:0,leads:0,cpl:0},
+  {d:'09/02',dia:'lunes',inv:365.34,imp:2139,alc:2100,clk:7,ctr:0.3,vis:14,leads:1,cpl:365.34},
+  {d:'10/02',dia:'martes',inv:370.19,imp:1415,alc:1288,clk:8,ctr:0.6,vis:15,leads:0,cpl:0},
+  {d:'11/02',dia:'miércoles',inv:389.80,imp:2449,alc:2257,clk:20,ctr:0.8,vis:23,leads:4,cpl:97.45},
+  {d:'12/02',dia:'jueves',inv:350.11,imp:2600,alc:2444,clk:19,ctr:0.7,vis:33,leads:8,cpl:43.76},
+  {d:'13/02',dia:'viernes',inv:295.32,imp:2654,alc:2407,clk:17,ctr:0.6,vis:20,leads:6,cpl:49.22},
+  {d:'14/02',dia:'sábado',inv:248.92,imp:2697,alc:2558,clk:28,ctr:1.0,vis:29,leads:3,cpl:82.97},
+  {d:'15/02',dia:'domingo',inv:296.37,imp:2073,alc:1860,clk:17,ctr:0.8,vis:19,leads:2,cpl:148.19},
+  {d:'16/02',dia:'lunes',inv:307.06,imp:2185,alc:1946,clk:15,ctr:0.7,vis:16,leads:2,cpl:153.53},
+  {d:'17/02',dia:'martes',inv:301.20,imp:1850,alc:1670,clk:14,ctr:0.8,vis:16,leads:2,cpl:150.60},
+  {d:'18/02',dia:'miércoles',inv:284.14,imp:2185,alc:1965,clk:15,ctr:0.7,vis:17,leads:1,cpl:284.14},
+  {d:'19/02',dia:'jueves',inv:280.54,imp:2354,alc:2105,clk:18,ctr:0.8,vis:19,leads:1,cpl:280.54},
+  {d:'20/02',dia:'viernes',inv:270.60,imp:2260,alc:2034,clk:23,ctr:1.0,vis:25,leads:2,cpl:135.30},
+  {d:'21/02',dia:'sábado',inv:289.66,imp:2224,alc:2061,clk:18,ctr:0.8,vis:21,leads:2,cpl:144.83},
+  {d:'22/02',dia:'domingo',inv:335.90,imp:2401,alc:2146,clk:26,ctr:1.1,vis:27,leads:3,cpl:111.97},
+  {d:'23/02',dia:'lunes',inv:302.97,imp:2728,alc:2468,clk:22,ctr:0.8,vis:23,leads:5,cpl:60.59},
+  {d:'24/02',dia:'martes',inv:272.89,imp:2160,alc:2007,clk:21,ctr:1.0,vis:22,leads:4,cpl:68.22},
+  {d:'25/02',dia:'miércoles',inv:284.82,imp:1549,alc:1380,clk:22,ctr:1.4,vis:24,leads:5,cpl:56.96},
+  {d:'26/02',dia:'jueves',inv:293.33,imp:1815,alc:1688,clk:22,ctr:1.2,vis:22,leads:3,cpl:97.78},
+  {d:'27/02',dia:'viernes',inv:268.62,imp:1606,alc:1489,clk:24,ctr:1.5,vis:25,leads:2,cpl:134.31},
+  {d:'28/02',dia:'sábado',inv:265.72,imp:1719,alc:1531,clk:26,ctr:1.5,vis:30,leads:2,cpl:132.86},
+];
+
+// ── PARSE CSV FROM SHEETS ──
+function parseCSV(text) {
+  const lines = text.trim().split('\n');
+  const headers = lines[0].split(',').map(h => h.trim().replace(/"/g,''));
+  const rows = [];
+  for (let i = 1; i < lines.length; i++) {
+    const vals = lines[i].split(',').map(v => v.trim().replace(/"/g,''));
+    if (!vals[1] || !/\d+\/\d+\/\d+/.test(vals[1])) continue;
+    const toN = s => {
+      if (!s) return 0;
+      s = s.replace(/\$/g,'').replace(/\./g,'').replace(',','.').replace('%','').trim();
+      return parseFloat(s) || 0;
+    };
+    rows.push({
+      d: vals[1].substring(0,5),
+      dia: vals[0],
+      inv: toN(vals[2]),
+      imp: toN(vals[3]),
+      alc: toN(vals[4]),
+      clk: toN(vals[6]),
+      ctr: toN(vals[7]),
+      vis: toN(vals[9]),
+      leads: toN(vals[11]),
+      cpl: toN(vals[13]),
+    });
+  }
+  return rows.length > 0 ? rows : null;
+}
+
+// ── RENDER ──
+function render(data) {
+  const active = data.filter(r => r.inv > 0);
+  const totalInv = data.reduce((s,r) => s+r.inv, 0);
+  const totalImp = data.reduce((s,r) => s+r.imp, 0);
+  const totalAlc = data.reduce((s,r) => s+r.alc, 0);
+  const totalClk = data.reduce((s,r) => s+r.clk, 0);
+  const totalVis = data.reduce((s,r) => s+r.vis, 0);
+  const totalLeads = data.reduce((s,r) => s+r.leads, 0);
+  const avgCPL = active.filter(r=>r.leads>0).reduce((s,r)=>s+r.cpl,0) / active.filter(r=>r.leads>0).length;
+  const avgCPM = active.reduce((s,r)=>s+(r.imp>0?(r.inv/r.imp*1000):0),0)/active.length;
+  const ctr = totalClk/totalImp*100;
+  const convRate = totalLeads/totalClk*100;
+
+  // Status line
+  document.getElementById('statusLine').innerHTML = `Datos: <strong>${data.length} días · ${totalLeads} leads · $${totalInv.toFixed(0)} invertidos</strong>`;
+  document.getElementById('lastUpdate').textContent = `Actualizado: ${new Date().toLocaleDateString('es-MX',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}`;
+
+  // KPIs
+  const kpis = [
+    { label:'Inversión total', value:'$'+totalInv.toFixed(0), sub:'MXN gastados', color:'', delta:'Mes completo', dir:'neutral' },
+    { label:'Impresiones', value: (totalImp/1000).toFixed(1)+'K', sub:'personas alcanzadas', color:'', delta:`Alcance: ${(totalAlc/1000).toFixed(1)}K`, dir:'neutral' },
+    { label:'Leads totales', value: totalLeads, sub:'formularios llenados', color:'success', delta:`${active.filter(r=>r.leads>0).length} días con leads`, dir:'up' },
+    { label:'CPL promedio', value:'$'+avgCPL.toFixed(0), sub:'costo por lead', color: avgCPL<100?'success':'danger', delta: avgCPL<100?'✓ Bajo $100':'↑ Por encima de $100', dir: avgCPL<100?'up':'down' },
+    { label:'CTR', value: ctr.toFixed(2)+'%', sub:'clics / impresiones', color: ctr>1?'success':'warn', delta: ctr>1?'↑ Sobre benchmark':'↓ Bajo 1%', dir: ctr>1?'up':'down' },
+    { label:'Conv. click→lead', value: convRate.toFixed(1)+'%', sub:'leads / clicks', color:'success', delta:'LP funcionando bien', dir:'up' },
+    { label:'Días activos', value: active.length+'/'+data.length, sub:'días con pauta activa', color:'', delta:'3 días sin inversión', dir:'neutral' },
+    { label:'CPM promedio', value:'$'+avgCPM.toFixed(0), sub:'por mil impresiones', color:'', delta:'Costo de alcance', dir:'neutral' },
+  ];
+
+  document.getElementById('kpiGrid').innerHTML = kpis.map(k => `
+    <div class="kpi-card ${k.color}">
+      <div class="kpi-label">${k.label}</div>
+      <div class="kpi-value">${k.value}</div>
+      <div class="kpi-sub">${k.sub}</div>
+      <div class="kpi-delta ${k.dir}">${k.delta}</div>
+    </div>
+  `).join('');
+
+  // Line chart
+  const labels = data.map(r => r.d);
+  const impData = data.map(r => r.imp);
+  const alcData = data.map(r => r.alc);
+  new Chart(document.getElementById('lineChart'), {
+    type:'line',
+    data:{
+      labels,
+      datasets:[
+        {label:'Impresiones',data:impData,borderColor:'#6c63ff',backgroundColor:'rgba(108,99,255,0.1)',tension:0.4,pointRadius:2,fill:true},
+        {label:'Alcance',data:alcData,borderColor:'#ff6584',backgroundColor:'rgba(255,101,132,0.05)',tension:0.4,pointRadius:2,fill:true,borderDash:[4,3]}
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{
+        x:{ticks:{color:'#7a7a9a',font:{size:10},maxRotation:45,autoSkip:true,maxTicksLimit:14},grid:{color:'rgba(255,255,255,0.04)'}},
+        y:{ticks:{color:'#7a7a9a',font:{size:10},callback:v=>(v/1000).toFixed(0)+'k'},grid:{color:'rgba(255,255,255,0.04)'}}
+      }
+    }
+  });
+
+  // Leads bar
+  const leadColors = data.map(r => r.leads >= 6 ? '#43e97b' : r.leads >= 3 ? '#6c63ff' : r.leads > 0 ? '#f9c74f' : '#2a2a3a');
+  new Chart(document.getElementById('leadsBar'), {
+    type:'bar',
+    data:{labels,datasets:[{label:'Leads',data:data.map(r=>r.leads),backgroundColor:leadColors,borderRadius:4}]},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{
+        x:{ticks:{color:'#7a7a9a',font:{size:9},maxRotation:45},grid:{display:false}},
+        y:{ticks:{color:'#7a7a9a',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}}
+      }
+    }
+  });
+
+  // CPL chart
+  const cplDays = data.filter(r=>r.leads>0);
+  new Chart(document.getElementById('cplChart'), {
+    type:'bar',
+    data:{
+      labels:cplDays.map(r=>r.d),
+      datasets:[{label:'CPL',data:cplDays.map(r=>r.cpl),backgroundColor:cplDays.map(r=>r.cpl<80?'#43e97b':r.cpl<150?'#f9c74f':'#ff6584'),borderRadius:3}]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{
+        x:{ticks:{color:'#7a7a9a',font:{size:9},maxRotation:45},grid:{display:false}},
+        y:{ticks:{color:'#7a7a9a',font:{size:9},callback:v=>'$'+v},grid:{color:'rgba(255,255,255,0.04)'}}
+      }
+    }
+  });
+
+  // Inversión chart
+  new Chart(document.getElementById('invChart'), {
+    type:'line',
+    data:{
+      labels,
+      datasets:[{label:'Inversión',data:data.map(r=>r.inv),borderColor:'#f9c74f',backgroundColor:'rgba(249,199,79,0.1)',tension:0.4,pointRadius:2,fill:true}]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{
+        x:{ticks:{color:'#7a7a9a',font:{size:9},maxRotation:45,autoSkip:true,maxTicksLimit:10},grid:{color:'rgba(255,255,255,0.04)'}},
+        y:{ticks:{color:'#7a7a9a',font:{size:9},callback:v=>'$'+v},grid:{color:'rgba(255,255,255,0.04)'}}
+      }
+    }
+  });
+
+  // Funnel
+  const funnelSteps = [
+    {label:'Impresiones', val:totalImp, pct:100, color:'#6c63ff'},
+    {label:'Clicks', val:totalClk, pct:(totalClk/totalImp*100), color:'#7b73ff'},
+    {label:'Visitas LP', val:totalVis, pct:(totalVis/totalImp*100), color:'#43e97b'},
+    {label:'Leads', val:totalLeads, pct:(totalLeads/totalImp*100), color:'#ff6584'},
+  ];
+  const maxVal = funnelSteps[0].val;
+  document.getElementById('funnelChart').innerHTML = funnelSteps.map(s => `
+    <div class="funnel-row">
+      <div class="funnel-label">${s.label}</div>
+      <div class="funnel-bar-wrap">
+        <div class="funnel-bar" style="width:${Math.max(s.val/maxVal*100,4)}%;background:${s.color}20;border-left:3px solid ${s.color};">
+          <span style="color:${s.color};font-size:11px;">${s.val.toLocaleString('es-MX')}</span>
+        </div>
+      </div>
+      <div class="funnel-val" style="color:${s.color}">${s.pct.toFixed(2)}%</div>
+    </div>
+  `).join('');
+
+  // Heatmap por día de semana
+  const dow = ['lunes','martes','miércoles','jueves','viernes','sábado','domingo'];
+  const dowShort = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+  const dowStats = dow.map(d => {
+    const days = data.filter(r => r.dia === d && r.inv > 0);
+    const tLeads = days.reduce((s,r)=>s+r.leads,0);
+    const tInv = days.reduce((s,r)=>s+r.inv,0);
+    const avgCpl = tLeads > 0 ? tInv/tLeads : 0;
+    return { d, tLeads, avgCpl };
+  });
+  const maxLeads = Math.max(...dowStats.map(d=>d.tLeads));
+  const heatmapEl = document.getElementById('heatmap');
+  heatmapEl.innerHTML = dowShort.map((s,i) => {
+    const stat = dowStats[i];
+    const intensity = maxLeads > 0 ? stat.tLeads / maxLeads : 0;
+    const bg = intensity > 0.7 ? 'rgba(108,99,255,0.35)' : intensity > 0.4 ? 'rgba(108,99,255,0.2)' : intensity > 0 ? 'rgba(108,99,255,0.08)' : 'rgba(255,255,255,0.03)';
+    const border = intensity > 0.5 ? '1px solid rgba(108,99,255,0.5)' : '1px solid rgba(255,255,255,0.06)';
+    return `<div class="heatmap-cell" style="background:${bg};border:${border};">
+      <div class="heatmap-day">${s}</div>
+      <div class="heatmap-leads" style="color:${intensity>0?'#f0f0f8':'#3a3a5a'}">${stat.tLeads}</div>
+      <div class="heatmap-cpl" style="color:${stat.avgCpl>0&&stat.avgCpl<100?'#43e97b':stat.avgCpl>150?'#ff6584':'#7a7a9a'}">${stat.avgCpl>0?'$'+stat.avgCpl.toFixed(0):'-'}</div>
+    </div>`;
+  }).join('');
+
+  // Table
+  const tbody = document.getElementById('tableBody');
+  tbody.innerHTML = data.map(r => {
+    const isZero = r.inv === 0;
+    const cplColor = r.cpl < 80 && r.cpl > 0 ? 'pill-good' : r.cpl < 150 && r.cpl > 0 ? 'pill-med' : r.cpl > 0 ? 'pill-bad' : 'pill-off';
+    const status = isZero ? '<span class="pill pill-off">Sin pauta</span>' : r.leads > 5 ? '<span class="pill pill-good">Excelente</span>' : r.leads > 2 ? '<span class="pill pill-med">Normal</span>' : r.leads > 0 ? '<span class="pill pill-bad">Bajo</span>' : '<span class="pill pill-off">Sin leads</span>';
+    return `<tr class="${isZero?'zero':''}">
+      <td>${r.d}</td>
+      <td style="color:var(--muted);text-transform:capitalize">${r.dia}</td>
+      <td>$${r.inv.toFixed(0)}</td>
+      <td>${r.imp.toLocaleString('es-MX')}</td>
+      <td>${r.alc.toLocaleString('es-MX')}</td>
+      <td>${r.clk}</td>
+      <td>${r.ctr.toFixed(1)}%</td>
+      <td><strong>${r.leads}</strong></td>
+      <td><span class="pill ${cplColor}">${r.cpl>0?'$'+r.cpl.toFixed(0):'-'}</span></td>
+      <td>${status}</td>
+    </tr>`;
+  }).join('');
+
+  // Insights
+  const bestDay = [...dowStats].sort((a,b)=>b.tLeads-a.tLeads)[0];
+  const worstCPL = [...data].filter(r=>r.cpl>0).sort((a,b)=>b.cpl-a.cpl)[0];
+  const bestCPL = [...data].filter(r=>r.cpl>0).sort((a,b)=>a.cpl-b.cpl)[0];
+  document.getElementById('insightsGrid').innerHTML = `
+    <div class="insight-card">
+      <div class="insight-icon blue">📈</div>
+      <div>
+        <div class="insight-title">Mejor día de la semana</div>
+        <div class="insight-text"><strong>${bestDay.d.charAt(0).toUpperCase()+bestDay.d.slice(1)}</strong> generó ${bestDay.tLeads} leads en el mes con CPL promedio de $${bestDay.avgCpl.toFixed(0)}. Considera aumentar presupuesto ese día.</div>
+      </div>
+    </div>
+    <div class="insight-card">
+      <div class="insight-icon green">✅</div>
+      <div>
+        <div class="insight-title">Mejor CPL del mes</div>
+        <div class="insight-text">El ${bestCPL.d} se logró el CPL más bajo: <strong>$${bestCPL.cpl.toFixed(0)}</strong> con ${bestCPL.leads} leads. Analiza qué ad set estaba activo ese día.</div>
+      </div>
+    </div>
+    <div class="insight-card">
+      <div class="insight-icon red">⚠️</div>
+      <div>
+        <div class="insight-title">Día más caro</div>
+        <div class="insight-text">El ${worstCPL.d} el CPL llegó a <strong>$${worstCPL.cpl.toFixed(0)}</strong>. Si el patrón se repite, considera pausar o reducir pauta esos días.</div>
+      </div>
+    </div>
+    <div class="insight-card">
+      <div class="insight-icon yellow">💡</div>
+      <div>
+        <div class="insight-title">CTR vs conversión</div>
+        <div class="insight-text">El CTR fue ${ctr.toFixed(2)}% pero la conversión click→lead fue <strong>${convRate.toFixed(1)}%</strong>. El problema no es la landing page — es el alcance inicial del anuncio.</div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('noVentasNotice').style.display = 'block';
+}
+
+// ── LOAD DATA ──
+async function loadData() {
+  try {
+    const resp = await fetch(CSV_URL);
+    if (!resp.ok) throw new Error('fetch failed');
+    const text = await resp.text();
+    const parsed = parseCSV(text);
+    if (parsed) {
+      render(parsed);
+      document.getElementById('lastUpdate').textContent = '✓ Datos en vivo · ' + new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'});
+      return;
+    }
+  } catch(e) {
+    console.warn('Sheets no disponible, usando datos embebidos:', e.message);
+  }
+  render(RAW);
+  document.getElementById('lastUpdate').textContent = 'Datos locales (Sheets sin conexión)';
+}
+
+loadData();
+</script>
+</body>
+</html>
